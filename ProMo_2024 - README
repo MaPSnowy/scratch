@@ -1,0 +1,99 @@
+Overview
+
+This SQLite database (ProMo1database.db) consists of two primary tables:
+
+    Shops: Stores shop details such as shop number, address, status, and partner information.
+    Sales: Records sales transactions, including details like sales date, reference number, quantity sold, and value paid.
+
+The database was designed to handle frequent updates, ensuring flexibility to reflect changes like opening/closing shops or modifying transaction data. Later, business requests led to further modifications.
+Installation Guide for SQLite and DB Browser for SQLite
+Step 1: Install SQLite
+
+SQLite is a lightweight, serverless SQL database engine.
+
+    Download SQLite: Visit the official SQLite Download Page. Download the version for your operating system.
+    Extract Files: Extract the downloaded ZIP to a directory on your machine (e.g., C:\sqlite\ on Windows).
+    Optional – Add SQLite to Path:
+        On Windows, navigate to Control Panel → System → Advanced System Settings → Environment Variables, and edit the Path variable to include your SQLite directory.
+        This allows you to run SQLite from any command prompt without specifying its full path.
+    Verify Installation: Open a terminal and type:
+
+    bash
+
+    sqlite3
+
+    You should see the SQLite prompt sqlite>.
+
+Step 2: Install DB Browser for SQLite
+
+DB Browser is a GUI tool for SQLite databases.
+
+    Download DB Browser: Visit the DB Browser Download Page.
+    Install the Tool: Follow the on-screen instructions to complete installation.
+    Opening the Database: In DB Browser, go to File → Open Database and select ProMo1database.db to begin viewing or editing.
+
+Table Descriptions
+Shops Table (Before Business Change Request)
+
+    Shop_Number: Unique identifier.
+    Shop_Address: Address of the shop.
+    Country_Name: Country where the shop is located.
+    Shop_Name: Name of the shop.
+    Status: Status of the shop (e.g., Open, Closed).
+    Partner_Number: Partner number.
+    Partner_Name: Partner name.
+
+Sales Table (Before Business Change Request)
+
+    Sales_Date: Date of the transaction.
+    Shop_Number: Shop identifier.
+    Quantity: Number of items sold.
+    RefCol_Number: Reference number for the transaction.
+    Transaction_ID: Unique transaction identifier.
+
+Business Change Request
+
+    Addition of Open and Closed Date Columns: Added columns to track when shops opened/closed.
+    Enforcing Quantity: Updated to ensure each transaction records one item sold.
+    Adding Value_Paid Column: Added a column to track payment amount (negative values allowed for returns).
+
+Final Table Descriptions (After Business Change Request)
+Shops Table
+
+    Same columns as before with added Open_Date and Closed_Date.
+
+Sales Table
+
+    Same as before with added Value_Paid column and enforced Quantity = 1.
+
+SQL Queries
+Table Creation Queries (Before Business Change Request)
+
+sql
+
+CREATE TABLE Shops (
+    Shop_Number TEXT NOT NULL UNIQUE,
+    Shop_Address TEXT NOT NULL,
+    Country_Name TEXT NOT NULL COLLATE NOCASE,
+    Shop_Name TEXT NOT NULL UNIQUE COLLATE NOCASE,
+    Status TEXT NOT NULL DEFAULT 'Open',
+    Partner_Number TEXT NOT NULL,
+    Partner_Name TEXT NOT NULL
+);
+
+CREATE TABLE Sales (
+    Sales_Date TEXT NOT NULL,
+    Shop_Number TEXT NOT NULL,
+    Quantity INTEGER NOT NULL DEFAULT 1,
+    RefCol_Number TEXT NOT NULL COLLATE BINARY,
+    Transaction_ID INTEGER NOT NULL UNIQUE
+);
+
+Alteration Queries (Business Change Request)
+
+sql
+
+ALTER TABLE Shops ADD COLUMN Open_Date TEXT NOT NULL DEFAULT '1970-01-01';
+ALTER TABLE Shops ADD COLUMN Closed_Date TEXT;
+ALTER TABLE Sales ADD COLUMN Value_Paid INTEGER NOT NULL CHECK (Value_Paid != 0);
+
