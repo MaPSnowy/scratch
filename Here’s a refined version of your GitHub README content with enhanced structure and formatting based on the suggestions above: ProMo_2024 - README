@@ -1,12 +1,11 @@
 # Project Title : ProMo_2024
-Creating a SQLite Database
-This SQLite database (ProMo1database.db) contains two primary tables:
+Overview
+This SQLite database (ProMo1database.db) consists of two primary tables:
 
-    Shops: Stores information related to each shop, such as shop number, address, status, and partner details.
-    Sales: Stores sales transactions related to each shop, including details like sales date, reference number, quantity, and value paid.
+    Shops: Stores shop details such as shop number, address, status, and partner information.
+    Sales: Records sales transactions, including details like sales date, reference number, quantity sold, and value paid.
 
-The database was designed with various business requirements in mind, including the ability to handle updates to shops and transactions. Later, business change requests led to modifications in the original tables, reflecting additions such as open and closed dates for shops and a value paid column for sales transactions.
-
+The database was designed to handle frequent updates, ensuring flexibility to reflect changes like opening/closing shops or modifying transaction data. Later, business requests led to further modifications.
 
 Installation Guide for SQLite and DB Browser for SQLite
 Step 1: Install SQLite
