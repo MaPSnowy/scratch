@@ -32,41 +32,61 @@ DB Browser is a GUI tool for SQLite databases.
     Install the Tool: Follow the on-screen instructions to complete installation.
     Opening the Database: In DB Browser, go to File → Open Database and select ProMo1database.db to begin viewing or editing.
 
-Table Descriptions
+Original Table Descriptions (Before Business Change Request)
+
 Shops Table (Before Business Change Request)
 
-    Shop_Number: Unique identifier.
-    Shop_Address: Address of the shop.
-    Country_Name: Country where the shop is located.
-    Shop_Name: Name of the shop.
-    Status: Status of the shop (e.g., Open, Closed).
-    Partner_Number: Partner number.
-    Partner_Name: Partner name.
+    Shop_Number: TEXT, NOT NULL, Unique identifier for each shop.
+    Shop_Address: TEXT, NOT NULL, Address of the shop.
+    Country_Name: TEXT, NOT NULL, Country where the shop is located.
+    Shop_Name: TEXT, NOT NULL, Name of the shop.
+    Status: TEXT, NOT NULL, Status of the shop (e.g., Open, Closed).
+    Partner_Number: TEXT, NOT NULL, Partner number associated with the shop.
+    Partner_Name: TEXT, NOT NULL, Partner name associated with the shop.
 
 Sales Table (Before Business Change Request)
 
-    Sales_Date: Date of the transaction.
-    Shop_Number: Shop identifier.
-    Quantity: Number of items sold.
-    RefCol_Number: Reference number for the transaction.
-    Transaction_ID: Unique transaction identifier.
+    Sales_Date: TEXT, NOT NULL, Date of the sales transaction.
+    Shop_Number: TEXT, NOT NULL, Shop where the transaction occurred.
+    Quantity: INTEGER, NOT NULL, Number of items sold.
+    RefCol_Number: TEXT, NOT NULL, Reference number for the transaction.
+    Transaction_ID: INTEGER, NOT NULL, Unique transaction identifier.
 
 Business Change Request
 
-    Addition of Open and Closed Date Columns: Added columns to track when shops opened/closed.
-    Enforcing Quantity: Updated to ensure each transaction records one item sold.
-    Adding Value_Paid Column: Added a column to track payment amount (negative values allowed for returns).
+    Addition of Open and Closed Date Columns:
+        The Shops table was modified to include an Open_Date column (with a default value of 1970-01-01) to track when shops opened and a Closed_Date column (nullable) to track when shops closed.
+
+    Enforcing Quantity of 1 in the Sales Table:
+        Initially, the Quantity column allowed values greater than 1, but it was updated to enforce a default value of 1 for all sales. Each transaction now represents the sale of a single item. If multiple items are sold, they should be recorded as multiple rows.
+
+    Adding Value_Paid Column to Sales Table:
+        A new Value_Paid column was added to track the amount paid for each sale. The column does not allow a value of 0, but negative values are allowed to represent returns.
 
 Final Table Descriptions (After Business Change Request)
-Shops Table
 
-    Same columns as before with added Open_Date and Closed_Date.
+Shops Table (After Business Change Request)
 
-Sales Table
+    Shop_Number: TEXT, NOT NULL, UNIQUE, Unique identifier for each shop.
+    Shop_Address: TEXT, NOT NULL, Address of the shop.
+    Country_Name: TEXT, NOT NULL, COLLATE NOCASE, Country where the shop is located.
+    Shop_Name: TEXT, NOT NULL, UNIQUE, COLLATE NOCASE, Name of the shop.
+    Status: TEXT, NOT NULL, DEFAULT 'Open', CHECK (Status IN ('Open', 'Closed', 'Going to Open')), Status of the shop.
+    Partner_Number: TEXT, NOT NULL, Partner number associated with the shop.
+    Partner_Name: TEXT, NOT NULL, Partner name associated with the shop.
+    Open_Date: TEXT, NOT NULL, DEFAULT '1970-01-01', Date when the shop opened.
+    Closed_Date: TEXT, NULL, Date when the shop closed (nullable).
 
-    Same as before with added Value_Paid column and enforced Quantity = 1.
+Sales Table (After Business Change Request)
 
-SQL Queries
+    Sales_Date: TEXT, NOT NULL, Date of the sales transaction.
+    Shop_Number: TEXT, NOT NULL, Shop where the transaction occurred.
+    Quantity: INTEGER, NOT NULL, DEFAULT 1, CHECK (Quantity = 1), Number of items sold (always 1).
+    RefCol_Number: TEXT, NOT NULL, COLLATE BINARY, Reference number for the transaction.
+    Transaction_ID: INTEGER, NOT NULL, UNIQUE, Unique transaction identifier.
+    Value_Paid: INTEGER, NOT NULL, CHECK (Value_Paid != 0), Amount paid for the transaction (can be negative for returns).
+
+Final SQL Queries
 Table Creation Queries (Before Business Change Request)
 
 sql
@@ -93,7 +113,32 @@ Alteration Queries (Business Change Request)
 
 sql
 
+-- Add Open_Date column with a default value for backward compatibility
 ALTER TABLE Shops ADD COLUMN Open_Date TEXT NOT NULL DEFAULT '1970-01-01';
-ALTER TABLE Shops ADD COLUMN Closed_Date TEXT;
-ALTER TABLE Sales ADD COLUMN Value_Paid INTEGER NOT NULL CHECK (Value_Paid != 0);
 
+-- Add Closed_Date column (nullable)
+ALTER TABLE Shops ADD COLUMN Closed_Date TEXT;
+
+-- Add Value_Paid column with a check that prevents it from being 0
+ALTER TABLE Sales ADD COLUMN Value_Paid INTEGER NOT NULL DEFAULT 1 CHECK (Value_Paid != 0);
+
+Insert Queries for Shops and Sales (Final Working Queries)
+
+sql
+
+-- Insert new shops
+INSERT INTO Shops (Shop_Number, Shop_Address, Country_Name, Shop_Name, Status, Partner_Number, Partner_Name, Open_Date)
+VALUES ('235', 'New Address St', 'Germany', 'Berlin Center Mall', 'Open', '235', 'Fashion Partners', '2023-01-01');
+
+INSERT INTO Shops (Shop_Number, Shop_Address, Country_Name, Shop_Name, Status, Partner_Number, Partner_Name, Open_Date, Closed_Date)
+VALUES ('236', 'Old Address St', 'Germany', 'Old Town Mall', 'Closed', '236', 'Style Cloths', '2022-05-01', '2024-10-01');
+
+-- Insert new sales
+INSERT INTO Sales (Sales_Date, Shop_Number, Quantity, RefCol_Number, Value_Paid)
+VALUES ('2024-10-13', 'S001', 1, 'REF123456', 89.99);
+
+INSERT INTO Sales (Sales_Date, Shop_Number, Quantity, RefCol_Number, Value_Paid)
+VALUES ('2024-10-13', 'S001', 1, 'REF123456', 32.99);
+
+INSERT INTO Sales (Sales_Date, Shop_Number, Quantity, RefCol_Number, Value_Paid)
+VALUES ('2024-10-13', 'S001', 1, 'REF123456', 18.95);
